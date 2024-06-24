@@ -1,15 +1,14 @@
 import axios from "axios"
 export async function GET(request) {
-    // // const { searchParams } = new URL(request.url)
-    // // const id = searchParams.get('id')
-    // const res = await axios.get("https://jsonplaceholder.typicode.com/users", {
-      
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    // })
-    // const users = await res.text();
+    // const { searchParams } = new URL(request.url)
+    // const id = searchParams.get('id')
+    const res = await fetch("https://jsonplaceholder.typicode.com/users", {
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const users = await res.json();
    
-    // return Response.json({ users })
-    return Response('Hi')
+    return Response.json({ users })
   }
