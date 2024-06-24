@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 function Page() {
     const [data, setData] = useState([]);
     const [clicked,setClicked] = useState(false);
+    const [isCachedData,setIsCachedData] = useState();
+    const [isFetchedFailed,setisFetchedFailed] = useState();
+
     const apiCall = async () => {
         setClicked(true)
         try {
@@ -12,8 +15,10 @@ function Page() {
             });
             if (response.ok) {
                 let jsonData = await response.json(); // Convert the response to JSON
-                console.log(jsonData); // Log the JSON data
                 setData(jsonData); // Set the JSON data to state
+                console.log("Cached Data - ",response.headers.get('isCachedData'));
+                setIsCachedData(response.headers.get('isCachedData'))
+                setisFetchedFailed(response.headers.get('isFetchedFailed'))
             } else {
                 console.log('Error:', response.statusText);
             }
@@ -30,10 +35,14 @@ function Page() {
             >
                 API Call - Software Developer
             </button>
-            {clicked && data.length == 0 && (
+            {clicked && isFetchedFailed &&(
                 <div>429 error</div>
             )}
+            
             {data.length > 0 && (
+                <div>
+                    {/* {console.log("is cached data  - this is inside jsx: ", isCachedData)} */}
+                    {/* {isCachedData && <p>Data which is older than 30 minutes</p>} */}
                 <ol className="mt-6 space-y-4">
                     {data.map((item, index) => (
                         <li
@@ -51,6 +60,7 @@ function Page() {
                         </li>
                     ))}
                 </ol>
+                </div>
             )}
         </div>
     );
