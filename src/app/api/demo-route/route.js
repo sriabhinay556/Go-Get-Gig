@@ -61,7 +61,7 @@ nodeCron.schedule('*/30 * * * *', async () => {
   for (const category of categories) {
     console.log(`Fetching data for category: ${category}`);
     await fetchAndCacheRSSFeed(category);
-    await delay(300000); // Wait 1 minute before fetching the next category to avoid rate limiting
+    await delay(300000); // Wait 5 minute before fetching the next category to avoid rate limiting
   }
   console.log('Scheduled cache update finished at:', new Date().toLocaleString());
 });
