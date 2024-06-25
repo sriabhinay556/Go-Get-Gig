@@ -5,10 +5,12 @@ import xml2js from 'xml2js';
 let cache = {}; // In-memory cache
 let isFetchFailed = false;
 
+const categories = ['Software Developer', 'Cyber Security', 'AI and Machine Learning', 'Data Engineer', 'UI/UX', 'Data Scientist'];
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Function to fetch and update the cache
-const fetchAndCacheRSSFeed = async (searchQuery, retries = 3) => {
+const fetchAndCacheRSSFeed = async (searchQuery, retries = 10) => {
   const url = `https://www.indeed.com/rss?q=${encodeURIComponent(searchQuery)}&l=United+States&sort=date`;
   for (let i = 0; i < retries; i++) {
     try {
@@ -26,9 +28,9 @@ const fetchAndCacheRSSFeed = async (searchQuery, retries = 3) => {
       });
 
       if (!response.ok) {
-        if (response.status === 403 && i < retries - 1) {
-          console.log(`Attempt ${i + 1} failed with status 403. Retrying...`);
-          await delay(1000); // Wait 1 second before retrying
+        if ((response.status === 403 || response.status === 429) && i < retries - 1) {
+          console.log(`Attempt ${i + 1} failed with status ${response.status}. Retrying...`);
+          await delay(2000 * (i + 1)); // Wait longer for each retry
           continue;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -53,17 +55,20 @@ const fetchAndCacheRSSFeed = async (searchQuery, retries = 3) => {
   }
 };
 
-// Schedule the cache updates every 30 minutes
+// Schedule the cache updates every 30 minutes for all categories
 nodeCron.schedule('*/30 * * * *', async () => {
   console.log('Scheduled cache update started at:', new Date().toLocaleString());
-  for (const searchQuery in cache) {
-    await fetchAndCacheRSSFeed(searchQuery);
+  for (const category of categories) {
+    console.log(`Fetching data for category: ${category}`);
+    await fetchAndCacheRSSFeed(category);
+    await delay(300000); // Wait 1 minute before fetching the next category to avoid rate limiting
   }
   console.log('Scheduled cache update finished at:', new Date().toLocaleString());
 });
 
-export async function GET() {
-  const searchQuery = "Software Developer";
+export async function GET(request) {
+  const url = new URL(request.url);
+  const searchQuery = url.searchParams.get('category') || "Software Developer"; // Default to "Software Developer" if no category is provided
   console.log(`Received search query: ${searchQuery}`);
 
   if (!cache[searchQuery]) {
@@ -74,7 +79,6 @@ export async function GET() {
   let isCachedData;
   if (Date.now() - cache[searchQuery].timestamp > 1800000) {
     // If cache is older than 30 minutes, fetch new data
-
     console.log('Cache is older than 30 minutes, fetching new data...');
     await fetchAndCacheRSSFeed(searchQuery);
     isCachedData = false;
