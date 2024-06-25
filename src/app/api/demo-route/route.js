@@ -74,6 +74,7 @@ export async function GET() {
   let isCachedData;
   if (Date.now() - cache[searchQuery].timestamp > 1800000) {
     // If cache is older than 30 minutes, fetch new data
+
     console.log('Cache is older than 30 minutes, fetching new data...');
     await fetchAndCacheRSSFeed(searchQuery);
     isCachedData = false;
