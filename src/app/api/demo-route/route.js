@@ -1,5 +1,3 @@
-import axios from 'axios';
-import nodeCron from 'node-cron';
 import xml2js from 'xml2js';
 
 let cache = {}; // In-memory cache
@@ -30,7 +28,7 @@ const fetchAndCacheRSSFeed = async (searchQuery, retries = 10) => {
       if (!response.ok) {
         if ((response.status === 403 || response.status === 429) && i < retries - 1) {
           console.log(`Attempt ${i + 1} failed with status ${response.status}. Retrying...`);
-          await delay(2000 * (i + 1)); // Wait longer for each retry
+          await delay(1000 * (i + 1)); // Wait longer for each retry
           continue;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -55,16 +53,6 @@ const fetchAndCacheRSSFeed = async (searchQuery, retries = 10) => {
   }
 };
 
-// Schedule the cache updates every 30 minutes for all categories
-nodeCron.schedule('*/30 * * * *', async () => {
-  console.log('Scheduled cache update started at:', new Date().toLocaleString());
-  for (const category of categories) {
-    console.log(`Fetching data for category: ${category}`);
-    await fetchAndCacheRSSFeed(category);
-    await delay(300000); // Wait 5 minute before fetching the next category to avoid rate limiting
-  }
-  console.log('Scheduled cache update finished at:', new Date().toLocaleString());
-});
 
 export async function GET(request) {
   const url = new URL(request.url);
